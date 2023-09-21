@@ -1,0 +1,29 @@
+{
+  "name": "kit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "format": "prettier --write .",
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.9.3",
+    "@opentelemetry/api": "^1.6.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.39.2",
+    "@opentelemetry/sdk-node": "^0.43.0",
+    "@remix-run/node": "^2.0.0",
+    "oauth4webapi": "^2.3.0",
+    "zod": "^3.22.2"
+  },
+  "devDependencies": {
+    "happy-dom": "^11.0.2",
+    "prettier": "^3.0.3",
+    "vite-tsconfig-paths": "^4.2.0",
+    "vitest": "^0.34.3"
+  }
+}
