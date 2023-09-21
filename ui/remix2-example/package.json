@@ -6,7 +6,7 @@
   "scripts": {
     "build": "remix build",
     "dev": "OTEL_SERVICE_NAME=spike-ui-api-otel-remix2 node --require @opentelemetry/auto-instrumentations-node/register ./node_modules/.bin/remix dev --manual",
-    "start": "OTEL_SERVICE_NAME=spike-ui-api-otel-remix2 node --require @opentelemetry/auto-instrumentations-node/register ./node_modules/.bin/remix-serve ./build/index.js",
+    "start": "node --require @opentelemetry/auto-instrumentations-node/register ./node_modules/.bin/remix-serve ./build/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
