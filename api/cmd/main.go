@@ -12,7 +12,6 @@ import (
 	"log/slog"
 
 	"github.com/go-kit/kit/endpoint"
-	httptransport "github.com/go-kit/kit/transport/http"
 	kitslog "github.com/lchenrevas/spike-ui-api-otel/kit/slog"
 	"github.com/peterbourgon/ff"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/go-kit/kit/otelkit"
@@ -23,6 +22,9 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
+	kitendpoint "github.com/go-kit/kit/endpoint"
+	kithttp "github.com/go-kit/kit/transport/http"
 )
 
 type Service interface {
@@ -99,14 +101,9 @@ func mainFunc(logger *slog.Logger) error {
 		GetMessageEndpoint: getMessageEndpoint,
 	}
 
-	baseHandler := httptransport.NewServer(
-		baseEndpoints.GetMessageEndpoint,
-		decodeGetMessageRequest,
-		encodeResponse,
-	)
+	baseHandler := NewGetMessageServer(ctx, baseEndpoints.GetMessageEndpoint, logger)
 
 	mux := http.NewServeMux()
-
 	mux.Handle("/GetMessage/", baseHandler)
 
 	port := os.Getenv("PORT")
@@ -150,14 +147,28 @@ type GetMessageResponse struct {
 	Err     error    `json:"error,omitempty"`
 }
 
-func decodeGetMessageRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req GetMessageRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
-	}
-	return &req, nil
-}
-
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	return json.NewEncoder(w).Encode(response)
+}
+
+func NewGetMessageServer(ctx context.Context, endpoint kitendpoint.Endpoint, logger *slog.Logger, options ...kithttp.ServerOption) http.Handler {
+	opts := []kithttp.ServerOption{}
+	opts = append(opts, options...)
+	var s http.Handler
+
+	decode := func(_ context.Context, r *http.Request) (interface{}, error) {
+		for key, values := range r.Header {
+			for _, value := range values {
+				logger.Log(ctx, slog.LevelInfo, "headers", "key", key, "value", value)
+			}
+		}
+
+		var req GetMessageRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			return nil, err
+		}
+		return &req, nil
+	}
+	s = kithttp.NewServer(endpoint, decode, encodeResponse, opts...)
+	return s
 }
