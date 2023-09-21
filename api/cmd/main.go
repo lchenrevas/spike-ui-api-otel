@@ -61,8 +61,9 @@ func main() {
 func mainFunc(logger *slog.Logger) error {
 	fs := flag.NewFlagSet("test-ui-api-propagation", flag.ExitOnError)
 	var (
-		otelEndpoint = fs.String("otel-endpoint", "", "")
-		otelKey      = fs.String("otel-api-key", "", "")
+		otelEndpoint    = fs.String("otel-endpoint", "", "")
+		otelKey         = fs.String("otel-api-key", "", "")
+		otelServiceName = fs.String("otel-service-name", "", "")
 	)
 	_ = ff.Parse(fs, os.Args[1:], ff.WithEnvVarPrefix("LCHEN_API"))
 	ctx := context.Background()
@@ -71,7 +72,8 @@ func mainFunc(logger *slog.Logger) error {
 		c := otlptracegrpc.NewClient(
 			otlptracegrpc.WithEndpoint(*otelEndpoint),
 			otlptracegrpc.WithHeaders(map[string]string{
-				"Authorization": fmt.Sprintf("Basic %v", *otelKey),
+				"Authorization":    fmt.Sprintf("Basic %v", *otelKey),
+				"x-honeycomb-team": fmt.Sprintf(*otelKey),
 			}),
 		)
 		exporter, err := otlptrace.New(ctx, c)
@@ -85,7 +87,7 @@ func mainFunc(logger *slog.Logger) error {
 			sdktrace.WithResource(
 				resource.NewWithAttributes(
 					semconv.SchemaURL,
-					semconv.ServiceNameKey.String("test_ui_api_propagation"),
+					semconv.ServiceNameKey.String(*otelServiceName),
 				),
 			),
 		)
